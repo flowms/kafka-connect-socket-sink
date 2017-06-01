@@ -10,7 +10,7 @@ mvn package
 
 # Sample Configuration
 ``` ini
-name=socket-connector
+name=unix-socket-connector
 connector.class=uk.cl.cam.ac.uk.cadets.UnixSocketSinkConnector
 tasks.max=1
 topics=topic_name
