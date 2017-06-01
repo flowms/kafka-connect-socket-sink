@@ -1,0 +1,4 @@
+name=opus-sink
+connector.class=uk.ac.cam.cl.cadets.OpusSinkConnector
+task.max=1
+topics=ddtrace-query-response
