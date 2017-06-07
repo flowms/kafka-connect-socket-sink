@@ -6,7 +6,7 @@
 	<groupId>cadets.cl.cam.ac.uk</groupId>
 	<version>0.0.1</version>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>kafka-connect-unix-socket-sink</artifactId>
+	<artifactId>kafka-connect-socket-sink</artifactId>
 	<packaging>jar</packaging>
 
 	<build>

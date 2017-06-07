@@ -1,5 +1,0 @@
-name=unix-socket-sink
-connector.class=uk.ac.cam.cl.cadets.UnixSocketSinkConnector
-task.max=1
-topics=ddtrace-query-response
-pathname=opus.sock
