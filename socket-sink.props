@@ -1,0 +1,6 @@
+name=socket-sink
+connector.class=uk.ac.cam.cl.cadets.SocketSinkConnector
+task.max=1
+topics=tcp-reconciliation
+hostname=192.168.100.12
+port=31415
