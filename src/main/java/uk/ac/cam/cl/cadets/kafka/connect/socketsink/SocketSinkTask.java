@@ -88,7 +88,8 @@ final public class SocketSinkTask extends SinkTask {
 
     @Override
     public void stop() {
-        outputStream.close();
+        if (outpuStream != null)
+            outputStream.close();
     }
 
     @Override
