@@ -91,7 +91,7 @@ final public class SocketSinkTask extends SinkTask {
 
     @Override
     public void stop() {
-        if (outpuStream != null)
+        if (outputStream != null)
             outputStream.close();
     }
 
