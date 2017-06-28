@@ -85,7 +85,7 @@ final public class SocketSinkTask extends SinkTask {
             outputStream = new PrintStream(clientSocket.getOutputStream());
         } catch (IOException e) {
             LOGGER.error("Error connecting to Unix socket {}", e);
-            throw new COnnectException("Error connecting to Unix socket" ,e);
+            throw new ConnectException("Error connecting to Unix socket" ,e);
         }
     }
 
