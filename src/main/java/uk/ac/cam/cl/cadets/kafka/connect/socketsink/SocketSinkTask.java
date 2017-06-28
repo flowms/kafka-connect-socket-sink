@@ -41,7 +41,7 @@ import java.util.Map;
 
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.connect.errors.RetriableException;
+import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTask;
 
@@ -66,7 +66,7 @@ final public class SocketSinkTask extends SinkTask {
         for (final SinkRecord record : records) {
             outputStream.println(record.value()); 
             if (outputStream.checkError()) {
-                throw new RetriableException("Connection closed");
+                throw new ConnectException("Connection closed");
             }
         }
     }
@@ -85,7 +85,7 @@ final public class SocketSinkTask extends SinkTask {
             outputStream = new PrintStream(clientSocket.getOutputStream());
         } catch (IOException e) {
             LOGGER.error("Error connecting to Unix socket {}", e);
-            throw new RetriableException("Error connecting to Unix socket" ,e);
+            throw new COnnectException("Error connecting to Unix socket" ,e);
         }
     }
 
