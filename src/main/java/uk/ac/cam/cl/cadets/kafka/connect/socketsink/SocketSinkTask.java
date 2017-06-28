@@ -65,6 +65,9 @@ final public class SocketSinkTask extends SinkTask {
     public void put(final Collection<SinkRecord> records) {
         for (final SinkRecord record : records) {
             outputStream.println(record.value()); 
+            if (outputStream.checkError()) {
+                throw new RetriableException("Connection closed");
+            }
         }
     }
 
