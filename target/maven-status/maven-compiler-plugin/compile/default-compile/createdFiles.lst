@@ -1,0 +1,4 @@
+uk/ac/cam/cl/cadets/kafka/connect/socketsink/SocketSinkTask.class
+uk/ac/cam/cl/cadets/kafka/connect/socketsink/SocketSinkConnector.class
+uk/ac/cam/cl/cadets/kafka/connect/socketsink/SocketSinkConfig.class
+uk/ac/cam/cl/cadets/kafka/connect/socketsink/Version.class

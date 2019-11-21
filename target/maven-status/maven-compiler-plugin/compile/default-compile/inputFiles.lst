@@ -1,0 +1,4 @@
+/home/peter/github/kafka-connect-socket-sink/src/main/java/uk/ac/cam/cl/cadets/kafka/connect/socketsink/Version.java
+/home/peter/github/kafka-connect-socket-sink/src/main/java/uk/ac/cam/cl/cadets/kafka/connect/socketsink/SocketSinkConfig.java
+/home/peter/github/kafka-connect-socket-sink/src/main/java/uk/ac/cam/cl/cadets/kafka/connect/socketsink/SocketSinkTask.java
+/home/peter/github/kafka-connect-socket-sink/src/main/java/uk/ac/cam/cl/cadets/kafka/connect/socketsink/SocketSinkConnector.java
