@@ -42,6 +42,7 @@ import java.util.Map;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.errors.RetriableException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTask;
 
@@ -56,6 +57,12 @@ final public class SocketSinkTask extends SinkTask {
     private Socket clientSocket;
     private PrintStream outputStream;
 
+    private int maxRetries;
+    private int retryBackoffMs;
+    private String hostname;
+    private int port;
+    int remainingRetries;
+
     @Override
     public void flush(final Map<TopicPartition, OffsetAndMetadata> offsets) {
         outputStream.flush();
@@ -64,29 +71,84 @@ final public class SocketSinkTask extends SinkTask {
     @Override
     public void put(final Collection<SinkRecord> records) {
         for (final SinkRecord record : records) {
-            outputStream.println(record.value()); 
+            outputStream.println(record.value());
             if (outputStream.checkError()) {
-                throw new ConnectException("Connection closed");
+                LOGGER.warn(
+                  "Write of {} records failed, remainingRetries={}",
+                  records.size(),
+                  remainingRetries
+                  );
+                if (remainingRetries == 0) {
+                    throw new ConnectException("Connection closed");
+                } else {
+                    stop();
+                    try
+                      {
+                        Thread.sleep(retryBackoffMs);
+                      }
+                      catch(InterruptedException ex)
+                      {
+                        Thread.currentThread().interrupt();
+                      }
+                    initWriter();
+                    remainingRetries--;
+                    throw new RetriableException("Connection closed, retrying...");
+                }
             }
+            remainingRetries = maxRetries;
         }
     }
 
     @Override
     public void start(final Map<String, String> args) {
-        final String hostname = args.get(SocketSinkConfig.HOSTNAME);
-        LOGGER.info("{} = {}", SocketSinkConfig.HOSTNAME, hostname); 
+        hostname = args.get(SocketSinkConfig.HOSTNAME);
+        LOGGER.info("{} = {}", SocketSinkConfig.HOSTNAME, hostname);
 
-        final int port = Integer.parseInt(args.get(SocketSinkConfig.PORT));
-        LOGGER.info("{} = {}", SocketSinkConfig.PORT, port); 
+        port = Integer.parseInt(args.get(SocketSinkConfig.PORT));
+        LOGGER.info("{} = {}", SocketSinkConfig.PORT, port);
 
+        maxRetries = Integer.parseInt(args.get(SocketSinkConfig.MAX_RETRIES));
+        LOGGER.info("{} = {}", SocketSinkConfig.MAX_RETRIES, maxRetries);
+
+        retryBackoffMs = Integer.parseInt(args.get(SocketSinkConfig.RETRY_BACKOFF_MS));
+        LOGGER.info("{} = {}", SocketSinkConfig.RETRY_BACKOFF_MS, retryBackoffMs);
+
+        remainingRetries = maxRetries;
+        initWriter();
+    }
+
+    void initWriter() {
         try {
-            clientSocket = new Socket(hostname, port);
+          stop();
+          clientSocket = new Socket(hostname, port);
+          clientSocket.setKeepAlive(true);
+          clientSocket.setTcpNoDelay(true);
+          clientSocket.setSoTimeout(retryBackoffMs);
 
-            outputStream = new PrintStream(clientSocket.getOutputStream());
+          outputStream = new PrintStream(clientSocket.getOutputStream());
+
         } catch (IOException e) {
-            LOGGER.error("Error connecting to Unix socket {}", e);
-            throw new ConnectException("Error connecting to Unix socket" ,e);
-        }
+          LOGGER.warn(
+          "Connection Refused, remainingRetries={}",
+          remainingRetries
+          );
+
+          if (remainingRetries == 0) {
+            throw new ConnectException("Connection Refused - Out of Retries...");
+          } else {
+            stop();
+            try
+              {
+                Thread.sleep(retryBackoffMs);
+              }
+              catch(InterruptedException ex)
+              {
+                Thread.currentThread().interrupt();
+              }
+              remainingRetries--;
+              throw new RetriableException("Connection refused, retrying...");
+            }
+          }
     }
 
     @Override

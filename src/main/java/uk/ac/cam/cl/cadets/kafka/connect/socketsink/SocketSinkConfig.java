@@ -59,11 +59,27 @@ final class SocketSinkConfig extends AbstractConfig {
     static final String PORT_DOC = "Socket port";
     static final int PORT_DEFAULT = 5432;
 
+    public static final String MAX_RETRIES = "max.retries";
+    private static final int MAX_RETRIES_DEFAULT = 10;
+    private static final String MAX_RETRIES_DOC =
+      "The maximum number of times to retry on errors before failing the task.";
+    private static final String MAX_RETRIES_DISPLAY = "Maximum Retries";
+
+    public static final String RETRY_BACKOFF_MS = "retry.backoff.ms";
+    private static final int RETRY_BACKOFF_MS_DEFAULT = 3000;
+    private static final String RETRY_BACKOFF_MS_DOC =
+      "The time in milliseconds to wait following an error before a retry attempt is made.";
+    private static final String RETRY_BACKOFF_MS_DISPLAY = "Retry Backoff (millis)";
+
     static {
         CONFIG_DEF.define(HOSTNAME, ConfigDef.Type.STRING,
             HOSTNAME_DEFAULT, ConfigDef.Importance.HIGH, HOSTNAME_DOC);
         CONFIG_DEF.define(PORT, ConfigDef.Type.INT,
             PORT_DEFAULT, ConfigDef.Importance.HIGH, PORT_DOC);
+        CONFIG_DEF.define(MAX_RETRIES,ConfigDef.Type.INT,
+            MAX_RETRIES_DEFAULT,ConfigDef.Importance.MEDIUM,MAX_RETRIES_DOC);
+        CONFIG_DEF.define(RETRY_BACKOFF_MS,ConfigDef.Type.INT,
+            RETRY_BACKOFF_MS_DEFAULT,ConfigDef.Importance.MEDIUM,RETRY_BACKOFF_MS_DOC);
     }
 
     SocketSinkConfig(final Map<? ,?> props) {
