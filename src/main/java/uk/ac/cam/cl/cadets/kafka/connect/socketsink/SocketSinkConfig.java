@@ -71,6 +71,12 @@ final class SocketSinkConfig extends AbstractConfig {
       "The time in milliseconds to wait following an error before a retry attempt is made.";
     private static final String RETRY_BACKOFF_MS_DISPLAY = "Retry Backoff (millis)";
 
+    public static final String DATA_FIELD = "data.field";
+    private static final String DATA_FIELD_DEFAULT = "";
+    private static final String DATA_FIELD_DOC =
+      "The field from the Struct to deliver to the server.";
+    private static final String DATA_FIELD_DISPLAY = "Data field to deliver";
+
     static {
         CONFIG_DEF.define(HOSTNAME, ConfigDef.Type.STRING,
             HOSTNAME_DEFAULT, ConfigDef.Importance.HIGH, HOSTNAME_DOC);
@@ -80,6 +86,8 @@ final class SocketSinkConfig extends AbstractConfig {
             MAX_RETRIES_DEFAULT,ConfigDef.Importance.MEDIUM,MAX_RETRIES_DOC);
         CONFIG_DEF.define(RETRY_BACKOFF_MS,ConfigDef.Type.INT,
             RETRY_BACKOFF_MS_DEFAULT,ConfigDef.Importance.MEDIUM,RETRY_BACKOFF_MS_DOC);
+            CONFIG_DEF.define(DATA_FIELD,ConfigDef.Type.STRING,
+                DATA_FIELD_DEFAULT,ConfigDef.Importance.MEDIUM,DATA_FIELD_DOC);
     }
 
     SocketSinkConfig(final Map<? ,?> props) {

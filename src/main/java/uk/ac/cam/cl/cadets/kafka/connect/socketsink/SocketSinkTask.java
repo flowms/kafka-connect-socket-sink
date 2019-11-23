@@ -39,12 +39,14 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.Map;
 
+
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.RetriableException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTask;
+import org.apache.kafka.connect.data.Struct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +64,7 @@ final public class SocketSinkTask extends SinkTask {
     private String hostname;
     private int port;
     int remainingRetries;
+    private String dataField;
 
     @Override
     public void flush(final Map<TopicPartition, OffsetAndMetadata> offsets) {
@@ -71,7 +74,8 @@ final public class SocketSinkTask extends SinkTask {
     @Override
     public void put(final Collection<SinkRecord> records) {
         for (final SinkRecord record : records) {
-            outputStream.println(record.value());
+            final Struct valueStruct = (Struct) record.value();
+            outputStream.println(dataField == null ? record.value() : valueStruct.get(dataField));
             if (outputStream.checkError()) {
                 LOGGER.warn(
                   "Write of {} records failed, remainingRetries={}",
@@ -112,6 +116,9 @@ final public class SocketSinkTask extends SinkTask {
 
         retryBackoffMs = Integer.parseInt(args.get(SocketSinkConfig.RETRY_BACKOFF_MS));
         LOGGER.info("{} = {}", SocketSinkConfig.RETRY_BACKOFF_MS, retryBackoffMs);
+
+        dataField = args.get(SocketSinkConfig.DATA_FIELD);
+        LOGGER.info("{} = {}", SocketSinkConfig.DATA_FIELD, dataField);
 
         remainingRetries = maxRetries;
         initWriter();
