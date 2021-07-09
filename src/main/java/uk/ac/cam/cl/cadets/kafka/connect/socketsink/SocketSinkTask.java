@@ -75,7 +75,9 @@ final public class SocketSinkTask extends SinkTask {
     public void put(final Collection<SinkRecord> records) {
         for (final SinkRecord record : records) {
             final Struct valueStruct = (Struct) record.value();
-            outputStream.println(dataField == null ? record.value() : valueStruct.get(dataField));
+            /* outputStream.println(dataField == null ? record.value() : valueStruct.get(dataField)); */
+            /* write data encapsulated by STX and ETX */
+            outputStream.printf("%c%s%c", 2, dataField == null ? record.value() : valueStruct.get(dataField), 3);
             if (outputStream.checkError()) {
                 LOGGER.warn(
                   "Write of {} records failed, remainingRetries={}",
@@ -95,6 +97,7 @@ final public class SocketSinkTask extends SinkTask {
                         Thread.currentThread().interrupt();
                       }
                     initWriter();
+                    outputStream.flush();
                     remainingRetries--;
                     throw new RetriableException("Connection closed, retrying...");
                 }
