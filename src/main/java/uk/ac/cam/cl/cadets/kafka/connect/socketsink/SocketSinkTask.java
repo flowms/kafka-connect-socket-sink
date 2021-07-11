@@ -35,6 +35,7 @@ package uk.ac.cam.cl.cadets.kafka.connect.socketsink;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.Map;
@@ -64,6 +65,7 @@ final public class SocketSinkTask extends SinkTask {
     private String hostname;
     private int port;
     int remainingRetries;
+    int SocketOpen;
     private String dataField;
 
     @Override
@@ -73,6 +75,8 @@ final public class SocketSinkTask extends SinkTask {
 
     @Override
     public void put(final Collection<SinkRecord> records) {
+        if (records.size() >= 1)
+            initWriter(); /* Establish connection every time to handle VPN disconnects not recognized y client and server */
         for (final SinkRecord record : records) {
             final Struct valueStruct = (Struct) record.value();
             /* outputStream.println(dataField == null ? record.value() : valueStruct.get(dataField)); */
@@ -88,6 +92,9 @@ final public class SocketSinkTask extends SinkTask {
                     throw new ConnectException("Connection closed");
                 } else {
                     stop();
+                    LOGGER.warn(
+                      "Socket Connection Closed..."
+                      );
                     try
                       {
                         Thread.sleep(retryBackoffMs);
@@ -97,9 +104,12 @@ final public class SocketSinkTask extends SinkTask {
                         Thread.currentThread().interrupt();
                       }
                     initWriter();
-                    outputStream.flush();
+                    LOGGER.warn(
+                      "Socket Initiated..."
+                      );
+
                     remainingRetries--;
-                    throw new RetriableException("Connection closed, retrying...");
+                    throw new RetriableException("Recovering from socket write issue, retrying...");
                 }
             }
             remainingRetries = maxRetries;
@@ -124,18 +134,28 @@ final public class SocketSinkTask extends SinkTask {
         LOGGER.info("{} = {}", SocketSinkConfig.DATA_FIELD, dataField);
 
         remainingRetries = maxRetries;
+        SocketOpen = 0;
         initWriter();
     }
 
     void initWriter() {
         try {
           stop();
-          clientSocket = new Socket(hostname, port);
+          clientSocket = new Socket();
+          clientSocket.connect(new InetSocketAddress(hostname,port),retryBackoffMs);
           clientSocket.setKeepAlive(true);
           clientSocket.setTcpNoDelay(true);
           clientSocket.setSoTimeout(retryBackoffMs);
 
           outputStream = new PrintStream(clientSocket.getOutputStream());
+
+          SocketOpen = 1;
+
+          LOGGER.info(
+          "Initiated Socket Connection to {}:{}...",
+          hostname,
+          port
+          );
 
         } catch (IOException e) {
           LOGGER.warn(
@@ -163,8 +183,20 @@ final public class SocketSinkTask extends SinkTask {
 
     @Override
     public void stop() {
-        if (outputStream != null)
-            outputStream.close();
+        try {
+            if (outputStream != null)
+                outputStream.flush();
+            if (SocketOpen==1)
+              clientSocket.close();
+            SocketOpen = 0;
+        } catch (Exception ex) {
+          LOGGER.warn(
+          "Problem Closing Socket Connection..."
+          );
+        }
+        LOGGER.info(
+        "Stopped Socket Connection..."
+        );
     }
 
     @Override
